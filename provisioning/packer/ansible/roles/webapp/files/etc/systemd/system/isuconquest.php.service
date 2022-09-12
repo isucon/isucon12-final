@@ -1,0 +1,17 @@
+[Unit]
+Description=isuconquest.php
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/php
+EnvironmentFile=/home/isucon/env
+PIDFile=/home/isucon/webapp/go/server.pid
+
+User=isucon
+Group=isucon
+ExecStart=/home/isucon/.x /home/isucon/local/php/sbin/php-fpm --fpm-config /home/isucon/local/php/etc/isuconquest.php-fpm.conf
+
+Restart   = always
+Type      = simple
+
+[Install]
+WantedBy=multi-user.target

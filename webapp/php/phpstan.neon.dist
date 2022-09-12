@@ -1,0 +1,13 @@
+parameters:
+  level: 4
+  paths:
+    - app
+    - public
+    - src
+  ignoreErrors:
+    -
+      message: '#^If condition is always#'
+      path: public/index.php
+    -
+      message: '#Property App\\IsuConquest\\Handler::\$logger is never read, only written\.#'
+      path: src/IsuConquest/Handler.php

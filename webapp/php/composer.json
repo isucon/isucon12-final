@@ -1,0 +1,39 @@
+{
+    "name": "isucon/isucon-12-final",
+    "require": {
+        "ext-apfd": "*",
+        "php": "^8.1",
+        "monolog/monolog": "^3.1",
+        "php-di/php-di": "^6.4",
+        "ramsey/uuid": "^4.4",
+        "slim/psr7": "^1.5",
+        "slim/slim": "^4.10"
+    },
+    "require-dev": {
+        "jangregor/phpstan-prophecy": "^1.0.0",
+        "phpstan/extension-installer": "^1.1.0",
+        "phpstan/phpstan": "^1.8",
+        "squizlabs/php_codesniffer": "^3.7"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        },
+        "process-timeout": 0,
+        "sort-packages": true
+    },
+    "autoload": {
+        "files": [
+            "src/IsuConquest/classes.php",
+            "src/IsuConquest/classes-admin.php"
+        ],
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "start": "php -S 0.0.0.0:8080 -t public public/index.php",
+        "style": "./vendor/bin/phpcs",
+        "analyse": "./vendor/bin/phpstan"
+    }
+}

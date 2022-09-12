@@ -1,0 +1,8 @@
+image
+.envrc
+ansible/roles/isucon-user/files/home/isucon/.ssh/authorized_keys
+ansible/roles/isuadmin-user/files/home/isuadmin/.ssh/authorized_keys
+ansible/roles/benchmarker/files/dump/*
+!ansible/roles/benchmarker/files/dump/.keep
+ansible/roles/webapp/files/home/isucon/webapp/sql/*
+!ansible/roles/webapp/files/home/isucon/webapp/sql/.keep

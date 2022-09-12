@@ -1,0 +1,40 @@
+{
+  "name": "isuconquest",
+  "version": "1.0.0",
+  "description": "Which do you like, ISU CONQUEST or ISUCON QUEST ? ",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "serve": "ts-node --transpile-only src/main.ts",
+    "lint": "eslint ./src --ext .ts",
+    "format": "prettier --write src/"
+  },
+  "author": "ISUCON12 core team / Node.js porting by acidlemon",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.3.0",
+    "express": "^4.18.1",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^2.3.3",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/morgan": "^1.9.3",
+    "@types/multer": "^1.4.7",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": "^5.33.0",
+    "@typescript-eslint/parser": "^5.33.0",
+    "eslint": "^8.22.0",
+    "eslint-config-prettier": "^8.5.0",
+    "nodemon": "^2.0.19",
+    "prettier": "^2.7.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  }
+}

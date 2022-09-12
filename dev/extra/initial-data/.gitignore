@@ -1,0 +1,14 @@
+85_present_not_receive_data.tsv
+88_exclude_user_presents_data.sql
+90_data.sql
+banUserInitialize.json
+cardMaster.json
+combackUserInitialize.json
+expItemMaster.json
+gachaAllItemMaster.json
+loginBonusRewardMaster.json
+oneYearUserInitialize.json
+platforms.json
+royalUserInitialize.json
+validateUserInitialize.json
+presentAllMaster.json

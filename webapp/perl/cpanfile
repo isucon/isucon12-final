@@ -1,0 +1,14 @@
+requires 'perl', '5.036';
+
+requires 'Kossy', '0.60';
+requires 'Plack::Middleware::CrossOrigin', '0.014';
+requires 'HTTP::Status', '6.37';
+requires 'Cpanel::JSON::XS', '4.31';
+requires 'Starlet', '0.31';
+requires 'DBD::mysql', '4.050';
+requires 'DBIx::Sunny', '0.9992';
+requires 'Text::CSV_XS', '1.48';
+requires 'String::CamelCase', '0.04';
+requires 'Data::UUID', '1.226';
+requires 'SQL::Maker', '1.21';
+requires 'Crypt::Bcrypt', '0.007';

@@ -1,0 +1,89 @@
+---
+- name: Copy rustup-init.sh
+  become: true
+  become_user: isucon
+  copy:
+    src: tmp/rustup-init.sh
+    dest: /tmp/rustup-init.sh
+    mode: 0755
+
+- name: Install Rust
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /usr/bin/sh -x /tmp/rustup-init.sh -y --no-modify-path --profile default --default-toolchain 1.63 -c rustfmt
+    chdir: /home/isucon
+
+- name: Install Node.js
+  become: true
+  shell:
+    cmd: /opt/xbuild/node-install v18.7.0 /home/isucon/local/node
+
+- name: Change owner of Node.js
+  become: true
+  file:
+    path: /home/isucon/local/node
+    state: directory
+    owner: isucon
+    group: isucon
+    recurse: true
+
+- name: Install Perl
+  become: true
+  shell:
+    cmd: /opt/xbuild/perl-install 5.36.0 /home/isucon/local/perl -- -Duselongdouble -j $(nproc)
+
+- name: Change owner of Perl
+  become: true
+  file:
+    path: /home/isucon/local/perl
+    state: directory
+    owner: isucon
+    group: isucon
+    recurse: true
+
+- name: Install cpm for Perl
+  become: true
+  become_user: isucon
+  shell: |
+    curl -fsSL https://raw.githubusercontent.com/skaji/cpm/main/cpm > /home/isucon/local/perl/bin/cpm
+
+- name: Install Ruby
+  become: true
+  shell:
+    cmd: MAKE_OPTS=-j$(nproc) /opt/xbuild/ruby-install 3.1.2 /home/isucon/local/ruby
+
+- name: Change owner of Ruby
+  become: true
+  file:
+    path: /home/isucon/local/ruby
+    state: directory
+    owner: isucon
+    group: isucon
+    recurse: true
+
+- name: Install Bundler(ruby)
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x gem install bundler -v '2.3.16' --no-doc
+
+- name: Install PHP
+  become: true
+  shell: |
+    /opt/xbuild/php-install 8.1.9 /home/isucon/local/php -- \
+    --with-pcre-regex --with-zlib --enable-fpm --enable-pdo --with-pear \
+    --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd --with-openssl \
+    --with-pcre-regex --with-pcre-dir --with-libxml-dir --enable-opcache \
+    --enable-bcmath --with-bz2 --enable-calendar --enable-cli --enable-shmop \
+    --enable-sysvsem --enable-sysvshm --enable-sysvmsg --enable-mbregex \
+    --enable-mbstring --enable-pcntl --enable-sockets --with-curl --enable-zip
+
+- name: Change owner of PHP
+  become: true
+  file:
+    path: /home/isucon/local/php
+    state: directory
+    owner: isucon
+    group: isucon
+    recurse: true

@@ -1,0 +1,11 @@
+---
+- hosts: all
+  tasks:
+    - import_role:
+        name: mysql
+    - import_role:
+        name: repository
+    - import_role:
+        name: webapp
+    - import_role:
+        name: cleanup

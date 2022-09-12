@@ -1,0 +1,9 @@
+---
+- name: Cleanup
+  become: true
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - /root/.ssh
+    - /home/isucon/isucon12-final

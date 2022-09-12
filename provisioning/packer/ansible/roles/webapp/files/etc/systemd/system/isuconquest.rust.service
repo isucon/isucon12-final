@@ -1,0 +1,16 @@
+[Unit]
+Description=isuconquest.rust
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/rust
+EnvironmentFile=/home/isucon/env
+
+User=isucon
+Group=isucon
+ExecStart=/home/isucon/.x /home/isucon/webapp/rust/target/release/isuconquest
+
+Restart   = always
+Type      = simple
+
+[Install]
+WantedBy=multi-user.target

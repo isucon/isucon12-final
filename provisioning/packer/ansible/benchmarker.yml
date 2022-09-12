@@ -1,0 +1,9 @@
+---
+- hosts: all
+  tasks:
+    - import_role:
+        name: isucon-user
+    - import_role:
+        name: repository
+    - import_role:
+        name: benchmarker

@@ -1,0 +1,54 @@
+---
+- name: Create /home/isucon/bin directory
+  become: true
+  file:
+    path: /home/isucon/bin
+    state: directory
+    mode: 0755
+    owner: isucon
+    group: isucon
+
+- name: Create /home/isucon/dump directory
+  become: true
+  file:
+    path: /home/isucon/dump
+    state: directory
+    mode: 0755
+    owner: isucon
+    group: isucon
+
+- name: Copy JSON file
+  become: true
+  become_user: isucon
+  copy:
+    src: dump/
+    dest: /home/isucon/dump/
+    mode: 0644
+
+
+- name: Build benchmarker
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x make build
+    chdir: /home/isucon/isucon12-final/benchmarker
+
+- name: Copy benchmarker
+  become: true
+  copy:
+    remote_src: true
+    src: /home/isucon/isucon12-final/benchmarker/bin/benchmarker
+    dest: /home/isucon/bin/benchmarker
+    owner: isucon
+    group: isucon
+    mode: 0755
+
+- name: Copy benchmarker resource file
+  become: true
+  copy:
+    remote_src: true
+    src: /home/isucon/isucon12-final/benchmarker/resource
+    dest: /home/isucon/resource
+    owner: isucon
+    group: isucon
+    mode: 0644

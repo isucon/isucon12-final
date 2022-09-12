@@ -1,0 +1,4 @@
+---
+- name: Reload kernel
+  become: true
+  shell: sysctl --system

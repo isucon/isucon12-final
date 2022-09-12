@@ -1,0 +1,136 @@
+---
+- name: Install nginx
+  become: true
+  apt:
+    name:
+      - nginx
+
+- name: Copy files
+  become: true
+  copy:
+    src: "{{ item }}"
+    dest: "/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  with_items:
+    - etc/nginx/nginx.conf
+    - etc/nginx/sites-available/isuconquest.conf
+    - etc/nginx/sites-available/isuconquest-php.conf
+    - etc/mysql/conf.d/my.cnf
+    - etc/systemd/system/isuconquest.go.service
+    - etc/systemd/system/isuconquest.nodejs.service
+    - etc/systemd/system/isuconquest.php.service
+    - etc/systemd/system/isuconquest.ruby.service
+    - etc/systemd/system/isuconquest.rust.service
+    - etc/systemd/system/isuconquest.perl.service
+    - home/isucon/local/php/etc/isuconquest.php-fpm.conf
+
+- name: Remove nginx default
+  become: true
+  file:
+    state: absent
+    path: /etc/nginx/sites-enabled/default
+
+- name: Enable isuconquest
+  become: true
+  file:
+    path: /etc/nginx/sites-enabled/isuconquest.conf
+    src: /etc/nginx/sites-available/isuconquest.conf
+    state: link
+
+- name: Copy webapp
+  become: true
+  become_user: isucon
+  command: cp -a /home/isucon/isucon12-final/webapp /home/isucon/webapp
+
+- name: Copy shell file
+  become: true
+  become_user: isucon
+  copy:
+    src: "{{ item }}"
+    dest: "/{{ item }}"
+    mode: "0755"
+  with_items:
+    - home/isucon/webapp/sql/init.sh
+    - home/isucon/webapp/sql/setup/setup.sh
+
+- name: Copy sql and tsv file
+  become: true
+  become_user: isucon
+  copy:
+    src: "{{ item }}"
+    dest: "/{{ item }}"
+    mode: "0644"
+  with_items:
+    - home/isucon/webapp/sql/4_alldata_exclude_user_presents.sql
+    - home/isucon/webapp/sql/5_user_presents_not_receive_data.tsv
+    - home/isucon/webapp/sql/setup/2_init.sql
+
+- name: Create isucon database
+  become: true
+  shell: >
+      mysql -uroot -e "CREATE DATABASE IF NOT EXISTS isucon;"
+
+- name: Load database schema
+  become: true
+  shell:
+    cmd: bash setup.sh
+    chdir: /home/isucon/webapp/sql/setup
+
+- name: Build rust application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x cargo build --locked --release
+    chdir: /home/isucon/webapp/rust
+
+- name: Build go application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x go build -o isuconquest .
+    chdir: /home/isucon/webapp/go
+
+- name: composer install for php application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x php composer.phar install
+    chdir: /home/isucon/webapp/php
+
+- name: npm install for node application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x npm install
+    chdir: /home/isucon/webapp/node
+
+- name: Change /home/isucon/local/perl/bin/cpm permission
+  become: true
+  become_user: isucon
+  file:
+    path: /home/isucon/local/perl/bin/cpm
+    mode: 0755
+
+- name: cpm install for perl application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: /home/isucon/.x cpm install
+    chdir: /home/isucon/webapp/perl
+
+- name: bundle install for ruby application
+  become: true
+  become_user: isucon
+  shell:
+    cmd: export BUNDLE_DEPLOYMENT=1 && /home/isucon/.x bundle install
+    chdir: /home/isucon/webapp/ruby
+
+
+- name: Enable isuconquest.go.service
+  become: true
+  systemd:
+    name: isuconquest.go
+    daemon_reload: true
+    enabled: true

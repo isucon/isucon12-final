@@ -1,0 +1,16 @@
+[Unit]
+Description=isuconquest.ruby
+
+[Service]
+WorkingDirectory=/home/isucon/webapp/ruby
+EnvironmentFile=/home/isucon/env
+
+User=isucon
+Group=isucon
+ExecStart=/home/isucon/.x /home/isucon/local/ruby/bin/bundle exec puma -e production -p 8080 -w 2
+
+Restart   = always
+Type      = simple
+
+[Install]
+WantedBy=multi-user.target
