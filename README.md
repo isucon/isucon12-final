@@ -56,11 +56,11 @@ PASS: password
 #### 2.1. ローカルでの起動
 
 リポジトリのルートでdocker runでnginxサーバーを起動します。
-nginxサーバーが起動完了したら、ブラウザから `http://localhost:8080/` にアクセスします。
+nginxサーバーが起動完了したら、ブラウザから `http://localhost:8888/` にアクセスします。
 APIサーバーの接続先を指定して起動ボタンを押下すると、ゲーム画面が起動します。
 
 ```sh
-$ docker run --name isucon12-frontend-nginx -v $(pwd)/docs:/usr/share/nginx/html:ro -p 8080:80 -d --rm nginx:stable-alpine
+$ docker run --name isucon12-frontend-nginx -v $(pwd)/docs:/usr/share/nginx/html:ro -p 8888:80 -d --rm nginx:stable-alpine
 ```
 
 #### 2.2. GitHub Pagesを利用
