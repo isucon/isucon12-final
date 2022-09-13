@@ -8,6 +8,13 @@
     owner: isucon
     group: isucon
 
+- name: Download dump data
+  become: true
+  become_user: isucon
+  shell:
+    cmd: make packer-copy-bench
+    chdir: /home/isucon/isucon12-final/dev
+
 - name: Create /home/isucon/dump directory
   become: true
   file:
@@ -24,7 +31,6 @@
     src: dump/
     dest: /home/isucon/dump/
     mode: 0644
-
 
 - name: Build benchmarker
   become: true
@@ -48,7 +54,7 @@
   copy:
     remote_src: true
     src: /home/isucon/isucon12-final/benchmarker/resource
-    dest: /home/isucon/resource
+    dest: /home/isucon/
     owner: isucon
     group: isucon
-    mode: 0644
+    mode: 0655

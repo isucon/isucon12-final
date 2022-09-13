@@ -8,17 +8,10 @@
     owner: root
     group: root
 
-- name: Copy deploy key
-  become: true
-  copy:
-    src: root/.ssh/isucon12-final.pem
-    dest: /root/.ssh/isucon12-final.pem
-    mode: 0600
-
 - name: Clone isucon12-final
   become: true
   git:
-    repo: git@github.com:isucon/isucon12-final.git
+    repo: https://github.com/isucon/isucon12-final.git
     dest: /home/isucon/isucon12-final
     clone: true
     force: true

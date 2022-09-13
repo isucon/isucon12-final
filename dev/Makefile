@@ -1,6 +1,7 @@
 .PHONY: get-initial-data
 get-initial-data:
-	gh release list | awk '/Latest/{print $$3}' | xargs gh release download --dir ..
+	wget https://github.com/isucon/isucon12-final/releases/download/initial_data_20220912/initial_data.tar.gz
+	mv initial_data.tar.gz ../
 
 .PHONY: initial-data
 initial-data: get-initial-data
