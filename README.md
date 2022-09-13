@@ -79,8 +79,14 @@ https://github.com/isucon/isucon12-final/releases/tag/initial_data_20220912
 
 （事前準備の手順では、こちらのデータをダウンロードしています）
 
+## 環境構築について
+
+provisioningディレクトリにあるansibleを用いて構築します
+
+詳細手順を追記予定です
+
 ## Links
 
 - [ISUCON12本選 当日マニュアル](https://gist.github.com/shirai-suguru/770d30d16688a07ba78e0a188cd99f9f)
 - [ISUCON12本選 アプリケーションマニュアル](https://gist.github.com/shirai-suguru/accb96c5f86200b5c16e1d2a8b533cc1)
-- [ISUCON12本選 問題の解説と講評](https://isucon.net/)
+- [ISUCON12本選 問題の解説と講評](https://isucon.net/archives/56959385.html)
