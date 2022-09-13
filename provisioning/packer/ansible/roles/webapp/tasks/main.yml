@@ -62,18 +62,6 @@
     - home/isucon/webapp/sql/init.sh
     - home/isucon/webapp/sql/setup/setup.sh
 
-- name: Copy sql and tsv file
-  become: true
-  become_user: isucon
-  copy:
-    src: "{{ item }}"
-    dest: "/{{ item }}"
-    mode: "0644"
-  with_items:
-    - home/isucon/webapp/sql/4_alldata_exclude_user_presents.sql
-    - home/isucon/webapp/sql/5_user_presents_not_receive_data.tsv
-    - home/isucon/webapp/sql/setup/2_init.sql
-
 - name: Create isucon database
   become: true
   shell: >
@@ -98,6 +86,24 @@
   shell:
     cmd: /home/isucon/.x go build -o isuconquest .
     chdir: /home/isucon/webapp/go
+
+- name: Clone ext-apfd
+  become: true
+  become_user: isucon
+  git:
+    repo: https://github.com/m6w6/ext-apfd.git
+    dest: /tmp/ext-apfd
+    clone: true
+    force: true
+    depth: 1
+
+- name: ext-apfd build
+  become: true
+  become_user: isucon
+  shell: |
+    cd /tmp/ext-apfd && /home/isucon/.x phpize && \
+    /home/isucon/.x ./configure --with-php-config=/home/isucon/local/php/bin/php-config && \
+    make && make install && echo "extension=apfd.so" >> /home/isucon/local/php/etc/php.ini
 
 - name: composer install for php application
   become: true
