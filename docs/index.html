@@ -5,8 +5,8 @@
     </head>
     <body>
         <center>
-            <label for="host">API接続先</label>
-            <input type="text" id="host" name="host" placeholder="http://localhost:8080/" size="40">
+            <label for="host">API接続先（末尾スラッシュ無し）</label>
+            <input type="text" id="host" name="host" placeholder="http://localhost:8080" size="40">
             <input type="button" onClick="let host=document.getElementById('host'); location.href='./webgl/index.html?host='+encodeURIComponent(host.value);" value="ゲーム起動">
         </center>
     </body>
