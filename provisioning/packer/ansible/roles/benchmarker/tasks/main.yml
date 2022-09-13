@@ -58,4 +58,4 @@
     dest: /home/isucon/
     owner: isucon
     group: isucon
-    mode: 0655
+    mode: 0755

@@ -19,6 +19,12 @@
     state: present
     system: no
 
+- name: Chmod isucon home directory
+  become: true
+  file:
+    path: /home/isucon
+    mode: 0755
+
 - name: Create .ssh directory for isucon
   become: true
   file:
