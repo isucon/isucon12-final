@@ -8,6 +8,11 @@
     owner: root
     group: root
 
+- name: Delete git clone dir
+  become: true
+  shell: |
+    rm -rf /home/isucon/isucon12-final
+
 - name: Clone isucon12-final
   become: true
   git:

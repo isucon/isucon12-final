@@ -23,11 +23,10 @@
 
 ## 事前準備
 
-サーバーサイドとベンチマーカーの初期化の際に使用するマスターデータを事前にダウンロードします。[実行には `gh` コマンドが必要です。](https://github.com/cli/cli)
+サーバーサイドとベンチマーカーの初期化の際に使用するマスターデータを事前にダウンロードします。(ghコマンドなしでも実行できるように修正しました)
 
 ```
 $ cd dev
-# gh コマンドがダウンロードされている状態で
 $ make initial-data
 ```
 
@@ -83,7 +82,7 @@ https://github.com/isucon/isucon12-final/releases/tag/initial_data_20220912
 
 provisioningディレクトリにあるansibleを用いて構築します
 
-詳細手順を追記予定です
+[環境構築手順](https://github.com/isucon/isucon12-final/blob/main/provisioning/packer/ansible/README.md)
 
 ## Links
 
