@@ -12,7 +12,7 @@
   become: true
   become_user: isucon
   shell:
-    cmd: make packer-copy-bench
+    cmd: make initial-data
     chdir: /home/isucon/isucon12-final/dev
 
 - name: Create /home/isucon/dump directory
@@ -28,9 +28,10 @@
   become: true
   become_user: isucon
   copy:
-    src: dump/
+    remote_src: true
+    src: /home/isucon/isucon12-final/benchmarker/dump/
     dest: /home/isucon/dump/
-    mode: 0644
+    mode: 0755
 
 - name: Build benchmarker
   become: true

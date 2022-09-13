@@ -43,7 +43,7 @@
   become: true
   become_user: isucon
   shell:
-    cmd: make packer-copy-app
+    cmd: make initial-data
     chdir: /home/isucon/isucon12-final/dev
 
 - name: Copy webapp
