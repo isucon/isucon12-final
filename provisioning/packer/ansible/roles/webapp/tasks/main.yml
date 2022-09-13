@@ -39,6 +39,13 @@
     src: /etc/nginx/sites-available/isuconquest.conf
     state: link
 
+- name: Download dump data
+  become: true
+  become_user: isucon
+  shell:
+    cmd: make packer-copy-app
+    chdir: /home/isucon/isucon12-final/dev
+
 - name: Copy webapp
   become: true
   become_user: isucon
@@ -70,7 +77,7 @@
 - name: Create isucon database
   become: true
   shell: >
-      mysql -uroot -e "CREATE DATABASE IF NOT EXISTS isucon;"
+    mysql -uroot -e "CREATE DATABASE IF NOT EXISTS isucon;"
 
 - name: Load database schema
   become: true
@@ -126,7 +133,6 @@
   shell:
     cmd: export BUNDLE_DEPLOYMENT=1 && /home/isucon/.x bundle install
     chdir: /home/isucon/webapp/ruby
-
 
 - name: Enable isuconquest.go.service
   become: true
