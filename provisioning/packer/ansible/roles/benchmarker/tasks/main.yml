@@ -53,8 +53,8 @@
   become: true
   copy:
     remote_src: true
-    src: /home/isucon/isucon12-final/benchmarker/resource/
-    dest: /home/isucon/resource/
+    src: /home/isucon/isucon12-final/benchmarker/resource
+    dest: /home/isucon/
     owner: isucon
     group: isucon
     mode: 0655
