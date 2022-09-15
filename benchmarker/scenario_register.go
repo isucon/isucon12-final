@@ -128,7 +128,9 @@ func (s *Scenario) UserRegistrationScenario(ctx context.Context, step *isucandar
 		return NoRewind(), nil, err
 	}
 
-	res, err := PostUserAction(ctx, agent, platform, masterVersion, time.Now())
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := PostUserAction(ctx, agent, platform, masterVersion, xIsuDate)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind(), nil, err
@@ -169,7 +171,9 @@ func (s *Scenario) ShowItemListSuccessScenario(ctx context.Context, step *isucan
 		return NoRewind(), "", err
 	}
 
-	res, err := GetItemList(ctx, agent, user.ID, masterVersion, time.Now(), login)
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := GetItemList(ctx, agent, user.ID, masterVersion, xIsuDate, login)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind(), "", err
@@ -241,7 +245,9 @@ func (s *Scenario) postAddExpCardIDSuccessScenario(ctx context.Context, step *is
 		},
 	}
 
-	res, err := PostAddExpCard(ctx, agent, user.ID, cardID, addCardExpItem, oneTimeToken, masterVersion, time.Now(), login)
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := PostAddExpCard(ctx, agent, user.ID, cardID, addCardExpItem, oneTimeToken, masterVersion, xIsuDate, login)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind(), err
@@ -288,7 +294,9 @@ func (s *Scenario) postCardSuccessScenario(ctx context.Context, step *isucandar.
 	userCardIDs[1] = userCards[1].ID
 	userCardIDs[2] = userCards[2].ID
 
-	res, err := PostCard(ctx, agent, user.ID, userCardIDs, masterVersion, time.Now(), login)
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := PostCard(ctx, agent, user.ID, userCardIDs, masterVersion, xIsuDate, login)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind(), err

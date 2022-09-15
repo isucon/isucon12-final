@@ -100,7 +100,9 @@ func (s *Scenario) LoginSuccessScenario(ctx context.Context, step *isucandar.Ben
 		return NoRewind(), nil
 	}
 
-	loginRes, err := PostLoginAction(ctx, agent, user.ID, user.ViewerID, masterVersion, time.Now())
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	loginRes, err := PostLoginAction(ctx, agent, user.ID, user.ViewerID, masterVersion, xIsuDate)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind(), nil
@@ -143,7 +145,9 @@ func (s *Scenario) ShowHomeViewSuccessScenario(ctx context.Context, step *isucan
 		return NoRewind()
 	}
 
-	res, err := GetHome(ctx, agent, user.ID, masterVersion, time.Now(), login)
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := GetHome(ctx, agent, user.ID, masterVersion, xIsuDate, login)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind()
@@ -178,7 +182,9 @@ func (s *Scenario) RedeemRewardSuccessScenario(ctx context.Context, step *isucan
 		return NoRewind()
 	}
 
-	res, err := PostReward(ctx, agent, user.ID, masterVersion, time.Now(), login)
+	now := time.Now()
+	xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+	res, err := PostReward(ctx, agent, user.ID, masterVersion, xIsuDate, login)
 	if err != nil {
 		AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 		return NoRewind()
@@ -189,7 +195,6 @@ func (s *Scenario) RedeemRewardSuccessScenario(ctx context.Context, step *isucan
 		return Rewind()
 	}
 
-	// TODO あとでちゃんとした方に変えておく
 	var rewardResponse = &validateRewardResponse{}
 
 	validationResult := ValidateResponse(
@@ -223,7 +228,9 @@ func (s *Scenario) AcceptGiftSuccessScenario(ctx context.Context, step *isucanda
 	var listPresentResponse *ListPresentResponse
 
 	{
-		res, err := GetPresentList(ctx, agent, user.ID, masterVersion, time.Now(), login)
+		now := time.Now()
+		xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+		res, err := GetPresentList(ctx, agent, user.ID, masterVersion, xIsuDate, login)
 		if err != nil {
 			AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 			return NoRewind()
@@ -264,7 +271,9 @@ func (s *Scenario) AcceptGiftSuccessScenario(ctx context.Context, step *isucanda
 			return NoRewind()
 		}
 
-		res, err := PostReceivePresent(ctx, agent, user.ID, presentIDs, masterVersion, time.Now(), login)
+		now := time.Now()
+		xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+		res, err := PostReceivePresent(ctx, agent, user.ID, presentIDs, masterVersion, xIsuDate, login)
 		if err != nil {
 			AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 			return NoRewind()
@@ -308,7 +317,9 @@ func (s *Scenario) RedeemGachaSuccessScenario(ctx context.Context, step *isucand
 	var listGachaResponse *ListGachaResponse
 
 	{
-		res, err := GetGachaList(ctx, agent, user.ID, masterVersion, time.Now(), login)
+		now := time.Now()
+		xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+		res, err := GetGachaList(ctx, agent, user.ID, masterVersion, xIsuDate, login)
 		if err != nil {
 			AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 			return NoRewind()
@@ -343,7 +354,9 @@ func (s *Scenario) RedeemGachaSuccessScenario(ctx context.Context, step *isucand
 	oneTimeToken := listGachaResponse.OneTimeToken
 
 	{
-		res, err := PostRedeemGacha(ctx, agent, user.ID, masterVersion, time.Now(), gachaTypeID, oneTimeToken, login)
+		now := time.Now()
+		xIsuDate := time.Date(2022, 8, 27, now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), myGMT)
+		res, err := PostRedeemGacha(ctx, agent, user.ID, masterVersion, xIsuDate, gachaTypeID, oneTimeToken, login)
 		if err != nil {
 			AddErrorIfNotCanceled(step, failure.NewError(ErrInvalidRequest, err))
 			return NoRewind()
