@@ -7,7 +7,7 @@ git cloneしたディレクトリで動かすのではなく、本番と同様�
 ### 本番の構成の補足
 
 本番環境では、サーバーのOSは Ubuntu 22.04 LTS を使用していました。
-台数は 2 vCPU, 4GB RAM のサーバーを 4 台、ベンチマーカー用に 4 vCPU, 8GB RAM のサーバーを 1 台の計 5 台となります。
+台数は 2 vCPU, 4GB RAM のサーバーを 5 台、ベンチマーカー用に 4 vCPU, 8GB RAM のサーバーを 1 台の計 6 台となります。
 
 ### 手順
 `inventory/hosts` に構築ターゲットとなるホストを記載ください（benchmarker,application）

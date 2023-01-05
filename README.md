@@ -83,7 +83,7 @@ https://github.com/isucon/isucon12-final/releases/tag/initial_data_20220912
 provisioningディレクトリにあるansibleを用いて構築します
 
 - [Ansible を用いた環境構築手順](https://github.com/isucon/isucon12-final/blob/main/provisioning/packer/ansible/README.md)
-- スペック: 本選当日は 2 vCPU, 4GB RAM のマシンを 4 台提供しました (ベンチマーカーは 4 コア 8GB)
+- スペック: 本選当日は 2 vCPU, 4GB RAM のマシンを 5 台提供しました。別途ベンチマーカーとして 4 vCPU, 8GB RAM のマシンを用意しました。
 
 
 ## Links
