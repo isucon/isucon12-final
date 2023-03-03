@@ -62,17 +62,20 @@ func main() {
 		AllowHeaders: []string{"Content-Type", "x-master-version", "x-session"},
 	}))
 
+	// connect db
 	dbx, err := connectDB(false)
 	if err != nil {
 		e.Logger.Fatalf("failed to connect to db: %v", err)
 	}
 	defer dbx.Close()
 
+	// setting server
 	e.Server.Addr = fmt.Sprintf(":%v", "8080")
 	h := &Handler{
 		DB: dbx,
 	}
 
+	// e.Use(middleware.CORS())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{}))
 
 	// utility
@@ -108,7 +111,6 @@ func main() {
 	e.Logger.Error(e.StartServer(e.Server))
 }
 
-// connectDB DBに接続する
 func connectDB(batch bool) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=%s&multiStatements=%t",
@@ -127,7 +129,7 @@ func connectDB(batch bool) (*sqlx.DB, error) {
 	return dbx, nil
 }
 
-// adminMiddleware 管理者ツール向けのmiddleware
+// adminMiddleware
 func (h *Handler) adminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		requestAt := time.Now()
@@ -141,7 +143,7 @@ func (h *Handler) adminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// apiMiddleware　ユーザ向けAPI向けのmiddleware
+// apiMiddleware
 func (h *Handler) apiMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		requestAt, err := time.Parse(time.RFC1123, c.Request().Header.Get("x-isu-date"))
@@ -150,7 +152,7 @@ func (h *Handler) apiMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		c.Set("requestTime", requestAt.Unix())
 
-		// 有効なマスタデータか確認
+		// マスタ確認
 		query := "SELECT * FROM version_masters WHERE status=1"
 		masterVersion := new(VersionMaster)
 		if err := h.DB.Get(masterVersion, query); err != nil {
@@ -164,7 +166,7 @@ func (h *Handler) apiMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return errorResponse(c, http.StatusUnprocessableEntity, ErrInvalidMasterVersion)
 		}
 
-		// BANユーザ確認
+		// check ban
 		userID, err := getUserID(c)
 		if err == nil && userID != 0 {
 			isBan, err := h.checkBan(userID)
@@ -176,6 +178,7 @@ func (h *Handler) apiMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 
+		// next
 		if err := next(c); err != nil {
 			c.Error(err)
 		}
@@ -183,7 +186,7 @@ func (h *Handler) apiMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-// checkSessionMiddleware セッションが有効か確認するmiddleware
+// checkSessionMiddleware
 func (h *Handler) checkSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sessID := c.Request().Header.Get("x-session")
@@ -214,7 +217,6 @@ func (h *Handler) checkSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 			return errorResponse(c, http.StatusForbidden, ErrForbidden)
 		}
 
-		// 期限切れチェック
 		if userSession.ExpiredAt < requestAt {
 			query = "UPDATE user_sessions SET deleted_at=? WHERE session_id=?"
 			if _, err = h.DB.Exec(query, requestAt, sessID); err != nil {
@@ -223,6 +225,7 @@ func (h *Handler) checkSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 			return errorResponse(c, http.StatusUnauthorized, ErrExpiredSession)
 		}
 
+		// next
 		if err := next(c); err != nil {
 			c.Error(err)
 		}
@@ -230,7 +233,7 @@ func (h *Handler) checkSessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 	}
 }
 
-// checkOneTimeToken ワンタイムトークンの確認用middleware
+// checkOneTimeToken
 func (h *Handler) checkOneTimeToken(token string, tokenType int, requestAt int64) error {
 	tk := new(UserOneTimeToken)
 	query := "SELECT * FROM user_one_time_tokens WHERE token=? AND token_type=? AND deleted_at IS NULL"
@@ -249,7 +252,7 @@ func (h *Handler) checkOneTimeToken(token string, tokenType int, requestAt int64
 		return ErrInvalidToken
 	}
 
-	// 使ったトークンは失効する
+	// 使ったトークンを失効する
 	query = "UPDATE user_one_time_tokens SET deleted_at=? WHERE token=?"
 	if _, err := h.DB.Exec(query, requestAt, token); err != nil {
 		return err
@@ -258,7 +261,7 @@ func (h *Handler) checkOneTimeToken(token string, tokenType int, requestAt int64
 	return nil
 }
 
-// checkViewerID viewerIDとplatformの確認を行う
+// checkViewerID
 func (h *Handler) checkViewerID(userID int64, viewerID string) error {
 	query := "SELECT * FROM user_devices WHERE user_id=? AND platform_id=?"
 	device := new(UserDevice)
@@ -272,7 +275,7 @@ func (h *Handler) checkViewerID(userID int64, viewerID string) error {
 	return nil
 }
 
-// checkBan BANされているユーザでかを確認する
+// checkBan
 func (h *Handler) checkBan(userID int64) (bool, error) {
 	banUser := new(UserBan)
 	query := "SELECT * FROM user_bans WHERE user_id=?"
@@ -285,7 +288,7 @@ func (h *Handler) checkBan(userID int64) (bool, error) {
 	return true, nil
 }
 
-// getRequestTime リクエストを受けた時間をコンテキストからunix timeで取得する
+// getRequestTime リクエストを受けた時間をコンテキストからunixtimeで取得する
 func getRequestTime(c echo.Context) (int64, error) {
 	v := c.Get("requestTime")
 	if requestTime, ok := v.(int64); ok {
@@ -335,15 +338,16 @@ func (h *Handler) loginProcess(tx *sqlx.Tx, userID int64, requestAt int64) (*Use
 	return user, loginBonuses, allPresents, nil
 }
 
-// isCompleteTodayLogin 当日分のログイン処理が終わっているかを確認する
+// isCompleteTodayLogin ログイン処理が終わっているか
 func isCompleteTodayLogin(lastActivatedAt, requestAt time.Time) bool {
 	return lastActivatedAt.Year() == requestAt.Year() &&
 		lastActivatedAt.Month() == requestAt.Month() &&
 		lastActivatedAt.Day() == requestAt.Day()
 }
 
-// obtainLoginBonus ログインボーナス付与
+// obtainLoginBonus
 func (h *Handler) obtainLoginBonus(tx *sqlx.Tx, userID int64, requestAt int64) ([]*UserLoginBonus, error) {
+	// login bonus masterから有効なログインボーナスを取得
 	loginBonuses := make([]*LoginBonusMaster, 0)
 	query := "SELECT * FROM login_bonus_masters WHERE start_at <= ? AND end_at >= ?"
 	if err := tx.Select(&loginBonuses, query, requestAt, requestAt); err != nil {
@@ -354,6 +358,7 @@ func (h *Handler) obtainLoginBonus(tx *sqlx.Tx, userID int64, requestAt int64) (
 
 	for _, bonus := range loginBonuses {
 		initBonus := false
+		// ボーナスの進捗取得
 		userBonus := new(UserLoginBonus)
 		query = "SELECT * FROM user_login_bonuses WHERE user_id=? AND login_bonus_id=?"
 		if err := tx.Get(userBonus, query, userID, bonus.ID); err != nil {
@@ -366,7 +371,7 @@ func (h *Handler) obtainLoginBonus(tx *sqlx.Tx, userID int64, requestAt int64) (
 			if err != nil {
 				return nil, err
 			}
-			userBonus = &UserLoginBonus{
+			userBonus = &UserLoginBonus{ // ボーナス初期化
 				ID:                 ubID,
 				UserID:             userID,
 				LoginBonusID:       bonus.ID,
@@ -385,13 +390,13 @@ func (h *Handler) obtainLoginBonus(tx *sqlx.Tx, userID int64, requestAt int64) (
 				userBonus.LoopCount += 1
 				userBonus.LastRewardSequence = 1
 			} else {
-				// 上限まで付与完了しているボーナス
+				// 上限まで付与完了
 				continue
 			}
 		}
 		userBonus.UpdatedAt = requestAt
 
-		// 付与するリソース取得
+		// 今回付与するリソース取得
 		rewardItem := new(LoginBonusRewardMaster)
 		query = "SELECT * FROM login_bonus_reward_masters WHERE login_bonus_id=? AND reward_sequence=?"
 		if err := tx.Get(rewardItem, query, bonus.ID, userBonus.LastRewardSequence); err != nil {
@@ -425,7 +430,7 @@ func (h *Handler) obtainLoginBonus(tx *sqlx.Tx, userID int64, requestAt int64) (
 	return sendLoginBonuses, nil
 }
 
-// obtainPresent プレゼント付与
+// obtainPresent プレゼント付与処理
 func (h *Handler) obtainPresent(tx *sqlx.Tx, userID int64, requestAt int64) ([]*UserPresent, error) {
 	normalPresents := make([]*PresentAllMaster, 0)
 	query := "SELECT * FROM present_all_masters WHERE registered_start_at <= ? AND registered_end_at >= ?"
@@ -433,6 +438,7 @@ func (h *Handler) obtainPresent(tx *sqlx.Tx, userID int64, requestAt int64) ([]*
 		return nil, err
 	}
 
+	// 全員プレゼント取得情報更新
 	obtainPresents := make([]*UserPresent, 0)
 	for _, np := range normalPresents {
 		received := new(UserPresentAllReceivedHistory)
@@ -446,6 +452,7 @@ func (h *Handler) obtainPresent(tx *sqlx.Tx, userID int64, requestAt int64) ([]*
 			return nil, err
 		}
 
+		// user present boxに入れる
 		pID, err := h.generateID()
 		if err != nil {
 			return nil, err
@@ -466,6 +473,7 @@ func (h *Handler) obtainPresent(tx *sqlx.Tx, userID int64, requestAt int64) ([]*
 			return nil, err
 		}
 
+		// historyに入れる
 		phID, err := h.generateID()
 		if err != nil {
 			return nil, err
@@ -560,7 +568,7 @@ func (h *Handler) obtainItem(tx *sqlx.Tx, userID, itemID int64, itemType int, ob
 			}
 			return nil, nil, nil, err
 		}
-
+		// 所持数取得
 		query = "SELECT * FROM user_items WHERE user_id=? AND item_id=?"
 		uitem := new(UserItem)
 		if err := tx.Get(uitem, query, userID, item.ID); err != nil {
@@ -570,7 +578,7 @@ func (h *Handler) obtainItem(tx *sqlx.Tx, userID, itemID int64, itemType int, ob
 			uitem = nil
 		}
 
-		if uitem == nil {
+		if uitem == nil { // 新規作成
 			uitemID, err := h.generateID()
 			if err != nil {
 				return nil, nil, nil, err
@@ -589,7 +597,7 @@ func (h *Handler) obtainItem(tx *sqlx.Tx, userID, itemID int64, itemType int, ob
 				return nil, nil, nil, err
 			}
 
-		} else {
+		} else { // 更新
 			uitem.Amount += int(obtainAmount)
 			uitem.UpdatedAt = requestAt
 			query = "UPDATE user_items SET amount=?, updated_at=? WHERE id=?"
@@ -634,6 +642,7 @@ type InitializeResponse struct {
 // createUser ユーザの作成
 // POST /user
 func (h *Handler) createUser(c echo.Context) error {
+	// parse body
 	defer c.Request().Body.Close()
 	req := new(CreateUserRequest)
 	if err := parseRequestBody(c, req); err != nil {
@@ -755,7 +764,7 @@ func (h *Handler) createUser(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	// セッション発行
+	// generate session
 	sID, err := h.generateID()
 	if err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -827,6 +836,7 @@ func (h *Handler) login(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// check ban
 	isBan, err := h.checkBan(user.ID)
 	if err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -835,6 +845,7 @@ func (h *Handler) login(c echo.Context) error {
 		return errorResponse(c, http.StatusForbidden, ErrForbidden)
 	}
 
+	// viewer id check
 	if err = h.checkViewerID(user.ID, req.ViewerID); err != nil {
 		if err == ErrUserDeviceNotFound {
 			return errorResponse(c, http.StatusNotFound, err)
@@ -848,6 +859,7 @@ func (h *Handler) login(c echo.Context) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
+	// sessionを更新
 	query = "UPDATE user_sessions SET deleted_at=? WHERE user_id=? AND deleted_at IS NULL"
 	if _, err = tx.Exec(query, requestAt, req.UserID); err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -873,7 +885,7 @@ func (h *Handler) login(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	// 同日にすでにログインしているユーザはログイン処理をしない
+	// すでにログインしているユーザはログイン処理をしない
 	if isCompleteTodayLogin(time.Unix(user.LastActivatedAt, 0), time.Unix(requestAt, 0)) {
 		user.UpdatedAt = requestAt
 		user.LastActivatedAt = requestAt
@@ -895,6 +907,7 @@ func (h *Handler) login(c echo.Context) error {
 		})
 	}
 
+	// login process
 	user, loginBonuses, presents, err := h.loginProcess(tx, req.UserID, requestAt)
 	if err != nil {
 		if err == ErrUserNotFound || err == ErrItemNotFound || err == ErrLoginBonusRewardNotFound {
@@ -955,6 +968,7 @@ func (h *Handler) listGacha(c echo.Context) error {
 		})
 	}
 
+	// ガチャ排出アイテム取得
 	gachaDataList := make([]*GachaData, 0)
 	query = "SELECT * FROM gacha_item_masters WHERE gacha_id=? ORDER BY id ASC"
 	for _, v := range gachaMasterList {
@@ -974,7 +988,7 @@ func (h *Handler) listGacha(c echo.Context) error {
 		})
 	}
 
-	// ガチャ実行用のワンタイムトークンの発行
+	// genearte one time token
 	query = "UPDATE user_one_time_tokens SET deleted_at=? WHERE user_id=? AND deleted_at IS NULL"
 	if _, err = h.DB.Exec(query, requestAt, userID); err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -1065,6 +1079,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 
 	consumedCoin := int64(gachaCount * 1000)
 
+	// userのisuconが足りるか
 	user := new(User)
 	query := "SELECT * FROM users WHERE id=?"
 	if err := h.DB.Get(user, query, userID); err != nil {
@@ -1077,6 +1092,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 		return errorResponse(c, http.StatusConflict, fmt.Errorf("not enough isucon"))
 	}
 
+	// gachaIDからガチャマスタの取得
 	query = "SELECT * FROM gacha_masters WHERE id=? AND start_at <= ? AND end_at >= ?"
 	gachaInfo := new(GachaMaster)
 	if err = h.DB.Get(gachaInfo, query, gachaID, requestAt, requestAt); err != nil {
@@ -1086,6 +1102,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// gachaItemMasterからアイテムリスト取得
 	gachaItemList := make([]*GachaItemMaster, 0)
 	err = h.DB.Select(&gachaItemList, "SELECT * FROM gacha_item_masters WHERE gacha_id=? ORDER BY id ASC", gachaID)
 	if err != nil {
@@ -1095,7 +1112,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 		return errorResponse(c, http.StatusNotFound, fmt.Errorf("not found gacha item"))
 	}
 
-	// ガチャ提供割合(weight)の合計値を算出
+	// weightの合計値を算出
 	var sum int64
 	err = h.DB.Get(&sum, "SELECT SUM(weight) FROM gacha_item_masters WHERE gacha_id=?", gachaID)
 	if err != nil {
@@ -1125,7 +1142,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 	}
 	defer tx.Rollback() //nolint:errcheck
 
-	// プレゼントにガチャ結果を付与する
+	// 直付与 => プレゼントに入れる
 	presents := make([]*UserPresent, 0, gachaCount)
 	for _, v := range result {
 		pID, err := h.generateID()
@@ -1151,6 +1168,7 @@ func (h *Handler) drawGacha(c echo.Context) error {
 		presents = append(presents, present)
 	}
 
+	// isuconをへらす
 	query = "UPDATE users SET isu_coin=? WHERE id=?"
 	totalCoin := user.IsuCoin - consumedCoin
 	if _, err := tx.Exec(query, totalCoin, user.ID); err != nil {
@@ -1227,6 +1245,7 @@ type ListPresentResponse struct {
 // receivePresent プレゼント受け取り
 // POST /user/{userID}/present/receive
 func (h *Handler) receivePresent(c echo.Context) error {
+	// read body
 	defer c.Request().Body.Close()
 	req := new(ReceivePresentRequest)
 	if err := parseRequestBody(c, req); err != nil {
@@ -1254,7 +1273,7 @@ func (h *Handler) receivePresent(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	// 未取得のプレゼント取得
+	// user_presentsに入っているが未取得のプレゼント取得
 	query := "SELECT * FROM user_presents WHERE id IN (?) AND deleted_at IS NULL"
 	query, params, err := sqlx.In(query, req.PresentIDs)
 	if err != nil {
@@ -1357,7 +1376,7 @@ func (h *Handler) listItem(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	// アイテムの強化に使うためのワンタイムトークンを発行
+	// genearte one time token
 	query = "UPDATE user_one_time_tokens SET deleted_at=? WHERE user_id=? AND deleted_at IS NULL"
 	if _, err = h.DB.Exec(query, requestAt, userID); err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -1438,6 +1457,7 @@ func (h *Handler) addExpToCard(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// get target card
 	card := new(TargetUserCardData)
 	query := `
 	SELECT uc.id , uc.user_id , uc.card_id , uc.amount_per_sec , uc.level, uc.total_exp, im.amount_per_sec as 'base_amount_per_sec', im.max_level , im.max_amount_per_sec , im.base_exp_per_level
@@ -1456,6 +1476,7 @@ func (h *Handler) addExpToCard(c echo.Context) error {
 		return errorResponse(c, http.StatusBadRequest, fmt.Errorf("target card is max level"))
 	}
 
+	// 消費アイテムの所持チェック
 	items := make([]*ConsumeUserItemData, 0)
 	query = `
 	SELECT ui.id, ui.user_id, ui.item_id, ui.item_type, ui.amount, ui.created_at, ui.updated_at, im.gained_exp
@@ -1479,14 +1500,19 @@ func (h *Handler) addExpToCard(c echo.Context) error {
 		items = append(items, item)
 	}
 
+	// 経験値付与
+	// 経験値をカードに付与
 	for _, v := range items {
 		card.TotalExp += v.GainedExp * v.ConsumeAmount
 	}
 
-	// lv up判定(lv upしたら生産性を加算)
+	// lvup判定(lv upしたら生産性を加算)
+	var nextLvThreshold float64 = float64(card.BaseExpPerLevel)
 	for {
-		nextLvThreshold := int(float64(card.BaseExpPerLevel) * math.Pow(1.2, float64(card.Level-1)))
-		if nextLvThreshold > card.TotalExp {
+		for i := 1; i < card.Level; i++ {
+			nextLvThreshold = math.Ceil(float64(nextLvThreshold)*1.2 + float64(nextLvThreshold))
+		}
+		if nextLvThreshold > float64(card.TotalExp) {
 			break
 		}
 
@@ -1502,6 +1528,7 @@ func (h *Handler) addExpToCard(c echo.Context) error {
 
 	defer tx.Rollback() //nolint:errcheck
 
+	// cardのlvと経験値の更新、itemの消費
 	query = "UPDATE user_cards SET amount_per_sec=?, level=?, total_exp=?, updated_at=? WHERE id=?"
 	if _, err = tx.Exec(query, card.AmountPerSec, card.Level, card.TotalExp, requestAt, card.ID); err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -1514,6 +1541,7 @@ func (h *Handler) addExpToCard(c echo.Context) error {
 		}
 	}
 
+	// get response data
 	resultCard := new(UserCard)
 	query = "SELECT * FROM user_cards WHERE id=?"
 	if err = tx.Get(resultCard, query, card.ID); err != nil {
@@ -1574,26 +1602,33 @@ type ConsumeUserItemData struct {
 }
 
 type TargetUserCardData struct {
-	ID               int64 `db:"id"`
-	UserID           int64 `db:"user_id"`
-	CardID           int64 `db:"card_id"`
-	AmountPerSec     int   `db:"amount_per_sec"`
-	Level            int   `db:"level"`
-	TotalExp         int   `db:"total_exp"`
-	BaseAmountPerSec int   `db:"base_amount_per_sec"`
-	MaxLevel         int   `db:"max_level"`
-	MaxAmountPerSec  int   `db:"max_amount_per_sec"`
-	BaseExpPerLevel  int   `db:"base_exp_per_level"`
+	ID           int64 `db:"id"`
+	UserID       int64 `db:"user_id"`
+	CardID       int64 `db:"card_id"`
+	AmountPerSec int   `db:"amount_per_sec"`
+	Level        int   `db:"level"`
+	TotalExp     int   `db:"total_exp"`
+
+	// lv1のときの生産性
+	BaseAmountPerSec int `db:"base_amount_per_sec"`
+	// 最高レベル
+	MaxLevel int `db:"max_level"`
+	// lv maxのときの生産性
+	MaxAmountPerSec int `db:"max_amount_per_sec"`
+	// lv1 -> lv2に上がるときのexp
+	BaseExpPerLevel int `db:"base_exp_per_level"`
 }
 
 // updateDeck 装備変更
 // POST /user/{userID}/card
 func (h *Handler) updateDeck(c echo.Context) error {
+
 	userID, err := getUserID(c)
 	if err != nil {
 		return errorResponse(c, http.StatusBadRequest, err)
 	}
 
+	// read body
 	defer c.Request().Body.Close()
 	req := new(UpdateDeckRequest)
 	if err := parseRequestBody(c, req); err != nil {
@@ -1616,6 +1651,7 @@ func (h *Handler) updateDeck(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// カード所持情報のバリデーション
 	query := "SELECT * FROM user_cards WHERE id IN (?)"
 	query, params, err := sqlx.In(query, req.CardIDs)
 	if err != nil {
@@ -1636,6 +1672,7 @@ func (h *Handler) updateDeck(c echo.Context) error {
 
 	defer tx.Rollback() //nolint:errcheck
 
+	// update data
 	query = "UPDATE user_decks SET updated_at=?, deleted_at=? WHERE user_id=? AND deleted_at IS NULL"
 	if _, err = tx.Exec(query, requestAt, requestAt, userID); err != nil {
 		return errorResponse(c, http.StatusInternalServerError, err)
@@ -1686,6 +1723,7 @@ func (h *Handler) reward(c echo.Context) error {
 		return errorResponse(c, http.StatusBadRequest, err)
 	}
 
+	// parse body
 	defer c.Request().Body.Close()
 	req := new(RewardRequest)
 	if err := parseRequestBody(c, req); err != nil {
@@ -1704,6 +1742,7 @@ func (h *Handler) reward(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// 最後に取得した報酬時刻取得
 	user := new(User)
 	query := "SELECT * FROM users WHERE id=?"
 	if err = h.DB.Get(user, query, userID); err != nil {
@@ -1713,6 +1752,7 @@ func (h *Handler) reward(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, err)
 	}
 
+	// 使っているデッキの取得
 	deck := new(UserDeck)
 	query = "SELECT * FROM user_decks WHERE user_id=? AND deleted_at IS NULL"
 	if err = h.DB.Get(deck, query, userID); err != nil {
@@ -1731,9 +1771,11 @@ func (h *Handler) reward(c echo.Context) error {
 		return errorResponse(c, http.StatusBadRequest, fmt.Errorf("invalid cards length"))
 	}
 
+	// 経過時間*生産性のcoin (1椅子 = 1coin)
 	pastTime := requestAt - user.LastGetRewardAt
 	getCoin := int(pastTime) * (cards[0].AmountPerSec + cards[1].AmountPerSec + cards[2].AmountPerSec)
 
+	// 報酬の保存(ゲームない通貨を保存)(users)
 	user.IsuCoin += int64(getCoin)
 	user.LastGetRewardAt = requestAt
 
@@ -1768,6 +1810,7 @@ func (h *Handler) home(c echo.Context) error {
 		return errorResponse(c, http.StatusInternalServerError, ErrGetRequestTime)
 	}
 
+	// 装備情報
 	deck := new(UserDeck)
 	query := "SELECT * FROM user_decks WHERE user_id=? AND deleted_at IS NULL"
 	if err = h.DB.Get(deck, query, userID); err != nil {
@@ -1777,6 +1820,7 @@ func (h *Handler) home(c echo.Context) error {
 		deck = nil
 	}
 
+	// 生産性
 	cards := make([]*UserCard, 0)
 	if deck != nil {
 		cardIds := []int64{deck.CardID1, deck.CardID2, deck.CardID3}
@@ -1793,6 +1837,7 @@ func (h *Handler) home(c echo.Context) error {
 		totalAmountPerSec += v.AmountPerSec
 	}
 
+	// 経過時間
 	user := new(User)
 	query = "SELECT * FROM users WHERE id=?"
 	if err = h.DB.Get(user, query, userID); err != nil {
@@ -1828,7 +1873,7 @@ func (h *Handler) health(c echo.Context) error {
 	return c.String(http.StatusOK, "OK")
 }
 
-// errorResponse エラーレスポンス
+// errorResponse returns error.
 func errorResponse(c echo.Context, statusCode int, err error) error {
 	c.Logger().Errorf("status=%d, err=%+v", statusCode, errors.WithStack(err))
 
@@ -1841,7 +1886,7 @@ func errorResponse(c echo.Context, statusCode int, err error) error {
 	})
 }
 
-// successResponse 成功時のレスポンス
+// successResponse responds success.
 func successResponse(c echo.Context, v interface{}) error {
 	return c.JSON(http.StatusOK, v)
 }
@@ -1851,7 +1896,7 @@ func noContentResponse(c echo.Context, status int) error {
 	return c.NoContent(status)
 }
 
-// generateID ユニークなIDを生成する
+// generateID uniqueなIDを生成する
 func (h *Handler) generateID() (int64, error) {
 	var updateErr error
 	for i := 0; i < 100; i++ {
@@ -1874,7 +1919,7 @@ func (h *Handler) generateID() (int64, error) {
 	return 0, fmt.Errorf("failed to generate id: %w", updateErr)
 }
 
-// generateUUID UUIDの生成
+// generateSessionID
 func generateUUID() (string, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -1884,12 +1929,12 @@ func generateUUID() (string, error) {
 	return id.String(), nil
 }
 
-// getUserID path paramからuserIDを取得する
+// getUserID gets userID by path param.
 func getUserID(c echo.Context) (int64, error) {
 	return strconv.ParseInt(c.Param("userID"), 10, 64)
 }
 
-// getEnv 環境変数から値を取得する
+// getEnv gets environment variable.
 func getEnv(key, defaultVal string) string {
 	if v := os.Getenv(key); v == "" {
 		return defaultVal
@@ -1898,7 +1943,7 @@ func getEnv(key, defaultVal string) string {
 	}
 }
 
-// parseRequestBody リクエストボディをパースする
+// parseRequestBody parses request body.
 func parseRequestBody(c echo.Context, dist interface{}) error {
 	buf, err := io.ReadAll(c.Request().Body)
 	if err != nil {
@@ -1922,7 +1967,6 @@ type UpdatedResource struct {
 	UserPresents     []*UserPresent    `json:"userPresents,omitempty"`
 }
 
-// makeUpdateResources 更新リソース返却用のオブジェクトを作成する
 func makeUpdatedResources(
 	requestAt int64,
 	user *User,
@@ -2067,7 +2111,7 @@ type UserOneTimeToken struct {
 }
 
 // //////////////////////////////////////
-// master entity
+// master
 
 type GachaMaster struct {
 	ID           int64  `json:"id" db:"id"`
