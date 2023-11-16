@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: benchmarker
   tasks:
     - import_role:
         name: isucon-user

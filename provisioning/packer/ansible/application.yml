@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: application
   tasks:
     - import_role:
         name: mysql
