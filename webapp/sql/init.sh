@@ -26,14 +26,13 @@ echo "delete from user_presents where id > 100000000000" | mysql -u"$ISUCON_DB_U
 		--port "$ISUCON_DB_PORT" \
 		"$ISUCON_DB_NAME"
 
-echo "LOAD DATA INFILE '/docker-entrypoint-initdb.d/5_user_presents_not_receive_data.tsv' REPLACE INTO TABLE user_presents FIELDS ESCAPED BY '|' IGNORE 1 LINES ;" | mysql -u"$ISUCON_DB_USER" \
-		-p"$ISUCON_DB_PASSWORD" \
-		--host "$ISUCON_DB_HOST" \
-		--port "$ISUCON_DB_PORT" \
-		"$ISUCON_DB_NAME" 
+DIR=`mysql -u"$ISUCON_DB_USER" -p"$ISUCON_DB_PASSWORD" -h "$ISUCON_DB_HOST" -Ns -e "show variables like 'secure_file_priv'" | cut -f2`
+SECURE_DIR=${DIR:-/var/lib/mysql-files/}
 
-mysql -u"$ISUCON_DB_USER" \
-		-p"$ISUCON_DB_PASSWORD" \
-		--host "$ISUCON_DB_HOST" \
-		--port "$ISUCON_DB_PORT" \
-		"$ISUCON_DB_NAME" < 6_id_generator_init.sql
+sudo cp 5_user_presents_not_receive_data.tsv ${SECURE_DIR}
+
+echo "LOAD DATA INFILE '${SECURE_DIR}5_user_presents_not_receive_data.tsv' REPLACE INTO TABLE user_presents FIELDS ESCAPED BY '|' IGNORE 1 LINES ;" | mysql -u"$ISUCON_DB_USER" \
+        -p"$ISUCON_DB_PASSWORD" \
+        --host "$ISUCON_DB_HOST" \
+        --port "$ISUCON_DB_PORT" \
+        "$ISUCON_DB_NAME" 
