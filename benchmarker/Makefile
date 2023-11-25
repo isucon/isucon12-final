@@ -11,7 +11,7 @@ dev: build
 
 .PHONY: run
 run: build
-	export ./bin/benchmarker --stage=prod --request-timeout=10s 
+	./bin/benchmarker --stage=prod --request-timeout=10s
 
 bin/benchmarker: $(shell find . -name '*.go' -print)
 	go build -buildvcs=false -o $@ .
